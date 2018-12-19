@@ -1,16 +1,15 @@
 import React, { Component } from 'react';
-import Filter from '../components/Filter';
-import SongList from '../components/SongList';
-import KaraokeDisplay from '../components/KaraokeDisplay';
-//import songs from '../data/songs';
-import KaraokeAPI from '../apis/karaokeApi'
 
+import KaraokeAPI from '../apis/karaokeApi'
+import KaraokeDisplay from '../components/KaraokeDisplay';
+
+import Sidebar from '../components/Sidebar';
 
 class KaraokeContainer extends Component {
   state = {
+    selectedSong: null,
     songs: [],
-    filterTerm: "",
-    selectedSong: null
+    queue: []
   }
 
   componentDidMount() {
@@ -20,19 +19,29 @@ class KaraokeContainer extends Component {
       })
   }
 
-  onFilterChange = filterTerm => {
-    this.setState({ filterTerm })
+  updateSelectedSong = (selectedSong) => {
+    this.setState({ selectedSong })
   }
 
   onPlay = id => {
-    if (this.state.selectedSong && this.state.selectedSong.id === id) return
-
     const selectedSong = this.state.songs.find(s => s.id === id)
+    if (!this.state.selectedSong) { // no selected song, play immediately
+      this.setState({ selectedSong })
+    } else if (!this.state.queue.includes(selectedSong) && this.state.selectedSong !== selectedSong) { // add to queue
+      const queue = [...this.state.queue, selectedSong]
+      this.setState({ queue })
+    }
+  }
+
+  onFinish = id => {
+    // mark played when song is finished, and remove from the queue
     KaraokeAPI.playSong(id)
       .then(data => {
         const songs = this.state.songs.map(song => song.id === id ? {...song, plays: data.plays} : song)
-        this.setState({ selectedSong, songs })
-      })
+        const selectedSong = this.state.queue[0]
+        const queue = this.state.queue.filter(song => song !== selectedSong)
+        this.setState({ songs, selectedSong, queue })
+      }) 
   }
 
   onLikeClick = id => {
@@ -51,18 +60,11 @@ class KaraokeContainer extends Component {
       })
   }
 
-  get songList() {
-    return this.state.filterTerm === "" ? this.state.songs : this.state.songs.filter(s => s.title.toLowerCase().includes(this.state.filterTerm.toLowerCase()))
-  }
-
   render() {
     return (
       <div className="karaoke-container">
-        <div className="sidebar">
-          <Filter filterTerm={this.state.filterTerm} onFilterChange={this.onFilterChange} />
-          <SongList onPlay={this.onPlay} songs={this.songList} />
-        </div>
-        <KaraokeDisplay onLikeClick={this.onLikeClick} onDislikeClick={this.onDislikeClick} song={this.state.selectedSong} />
+        <Sidebar onPlay={this.onPlay} songs={this.state.songs} selectedSong={this.state.selectedSong} queue={this.state.queue} />
+        <KaraokeDisplay onFinish={this.onFinish} onLikeClick={this.onLikeClick} onDislikeClick={this.onDislikeClick} song={this.state.selectedSong} />
       </div>
     );
   }

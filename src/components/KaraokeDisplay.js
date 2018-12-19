@@ -1,7 +1,8 @@
 import React from 'react';
 import Lyrics from './Lyrics';
+import VoteBar from './VoteBar';
 
-const KaraokeDisplay = ({song, onLikeClick, onDislikeClick}) => {
+const KaraokeDisplay = ({song, onLikeClick, onDislikeClick, onFinish}) => {
 
   const onLikeButtonClick = () => {
     onLikeClick(song.id)
@@ -11,15 +12,18 @@ const KaraokeDisplay = ({song, onLikeClick, onDislikeClick}) => {
     onDislikeClick(song.id)
   }
 
+  const onLyricsFinish = () => {
+    onFinish(song.id)
+  }
+
   return (
     <div className="karaoke-display">
       {song &&
         (
           <React.Fragment>
-            <button className="up-button" onClick={onLikeButtonClick}>Like</button>
-            <button className="down-button" onClick={onDislikeButtonClick}>Dislike</button>
+            <VoteBar upTitle="Like" voteUp={onLikeButtonClick} downTitle="Dislike" voteDown={onDislikeButtonClick} />
             <h2>{song.title}</h2>
-            <Lyrics lyrics={song.lyrics} />
+            <Lyrics onFinish={onLyricsFinish} lyrics={song.lyrics} />
           </React.Fragment>
         )
       }

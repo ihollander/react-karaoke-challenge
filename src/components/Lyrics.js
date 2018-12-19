@@ -110,7 +110,7 @@ class Lyrics extends Component {
 }
 
 Lyrics.defaultProps = {
-  speed: 250,
+  speed: 50,
 }
 
 export default Lyrics;
